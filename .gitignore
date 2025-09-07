@@ -1,9 +1,0 @@
-node_modules
-# Keep environment variables out of version control
-.env
-
-# Keep migration files in version control, but ignore the lock file
-/backend/prisma/migrations/migration_lock.toml
-
-# Generated Prisma client
-/backend/generated/prisma
