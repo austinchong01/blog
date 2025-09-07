@@ -61,11 +61,11 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// API routes (to be implemented)
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/posts', require('./routes/posts'));
-// app.use('/api/comments', require('./routes/comments'));
-// app.use('/api/users', require('./routes/users'));
+// API routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/posts', require('./routes/posts'));
+app.use('/api/comments', require('./routes/comments'));
+app.use('/api/users', require('./routes/users'));
 
 // Global error handler
 app.use((err, req, res, next) => {
