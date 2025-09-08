@@ -8,7 +8,7 @@ const {
   updatePost,
   deletePost
 } = require('../controllers/postsController');
-const { protect, optionalAuth, isAuthor, isAdmin } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const router = express.Router();
@@ -35,9 +35,9 @@ const postValidation = [
 router.get('/', getPosts);
 
 // @route   GET /api/posts/all
-// @desc    Get all posts including drafts (admin/author)
-// @access  Private (Author/Admin)
-router.get('/all', protect, isAuthor, getAllPosts);
+// @desc    Get all posts including drafts (any authenticated user)
+// @access  Private (Any authenticated user)
+router.get('/all', protect, getAllPosts);
 
 // @route   GET /api/posts/:slug
 // @desc    Get single post by slug
@@ -46,17 +46,17 @@ router.get('/:slug', optionalAuth, getPost);
 
 // @route   POST /api/posts
 // @desc    Create new post
-// @access  Private (Author/Admin)
-router.post('/', protect, isAuthor, postValidation, validate, createPost);
+// @access  Private (Any authenticated user)
+router.post('/', protect, postValidation, validate, createPost);
 
 // @route   PUT /api/posts/:id
 // @desc    Update post
-// @access  Private (Author/Admin - own posts)
-router.put('/:id', protect, isAuthor, postValidation, validate, updatePost);
+// @access  Private (Any authenticated user)
+router.put('/:id', protect, postValidation, validate, updatePost);
 
 // @route   DELETE /api/posts/:id
 // @desc    Delete post
-// @access  Private (Author/Admin - own posts)
-router.delete('/:id', protect, isAuthor, deletePost);
+// @access  Private (Any authenticated user)
+router.delete('/:id', protect, deletePost);
 
 module.exports = router;

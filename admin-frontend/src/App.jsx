@@ -15,14 +15,18 @@ import './App.css';
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'loading:', loading);
+  
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
   
   if (!isAuthenticated) {
+    console.log('ProtectedRoute - Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
+  console.log('ProtectedRoute - Authenticated, rendering children');
   return children;
 };
 
@@ -42,7 +46,9 @@ const AdminRoute = ({ children }) => {
 };
 
 function AppContent() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+
+  console.log('AppContent - isAuthenticated:', isAuthenticated, 'loading:', loading, 'user:', user);
 
   return (
     <div className="App">
@@ -52,7 +58,17 @@ function AppContent() {
           <Route 
             path="/login" 
             element={
-              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+              isAuthenticated ? (
+                <>
+                  {console.log('Login route - Already authenticated, redirecting to dashboard')}
+                  <Navigate to="/dashboard" replace />
+                </>
+              ) : (
+                <>
+                  {console.log('Login route - Not authenticated, showing login')}
+                  <Login />
+                </>
+              )
             } 
           />
           <Route

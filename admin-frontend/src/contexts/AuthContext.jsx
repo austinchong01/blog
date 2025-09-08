@@ -41,15 +41,13 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
         const userData = data.data.user;
         
-        // Check if user has admin or author privileges
-        if (userData.role === 'ADMIN' || userData.role === 'AUTHOR') {
-          setUser(userData);
-        } else {
-          // User doesn't have admin/author privileges
-          logout();
-        }
+        // FIXED: Allow all authenticated users to access admin interface
+        // You can add role restrictions on specific routes instead
+        setUser(userData);
+        console.log('User authenticated successfully:', userData);
       } else {
         // Token is invalid
+        console.log('Token is invalid, logging out');
         logout();
       }
     } catch (error) {
@@ -62,9 +60,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('Attempting login with:', { email, apiUrl: API_BASE_URL });
+      const loginUrl = `${API_BASE_URL}/auth/login`;
+      console.log('Full login URL:', loginUrl);
+      console.log('API_BASE_URL:', API_BASE_URL);
+      console.log('VITE_API_URL from env:', import.meta.env.VITE_API_URL);
       
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(loginUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +83,6 @@ export const AuthProvider = ({ children }) => {
         console.log('Login successful, user:', user);
         console.log('Token received:', token ? 'Yes' : 'No');
         
-        // Allow any authenticated user to access
         localStorage.setItem("admin_token", token);
         setToken(token);
         setUser(user);

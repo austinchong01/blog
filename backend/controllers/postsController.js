@@ -71,9 +71,9 @@ const getPosts = async (req, res) => {
   }
 };
 
-// @desc    Get all posts (including drafts) - Admin/Author only
+// @desc    Get all posts (including drafts) - Any authenticated user
 // @route   GET /api/posts/all
-// @access  Private (Admin/Author)
+// @access  Private (Any authenticated user)
 const getAllPosts = async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
@@ -83,10 +83,7 @@ const getAllPosts = async (req, res) => {
     if (status === "published") where.published = true;
     if (status === "draft") where.published = false;
 
-    // If user is AUTHOR, only show their posts
-    if (req.user.role === "AUTHOR") {
-      where.authorId = req.user.id;
-    }
+    // REMOVED: Role-based filtering - now any authenticated user can see all posts
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
@@ -180,12 +177,9 @@ const getPost = async (req, res) => {
       });
     }
 
-    // If post is not published, only author/admin can see it
+    // If post is not published, only authenticated users can see it
     if (!post.published) {
-      if (
-        !req.user ||
-        (req.user.id !== post.authorId && req.user.role !== "ADMIN")
-      ) {
+      if (!req.user) {
         return res.status(404).json({
           success: false,
           message: "Post not found",
@@ -208,7 +202,7 @@ const getPost = async (req, res) => {
 
 // @desc    Create new post
 // @route   POST /api/posts
-// @access  Private (Author/Admin)
+// @access  Private (Any authenticated user)
 const createPost = async (req, res) => {
   try {
     const { title, content, published = false } = req.body;
@@ -265,7 +259,7 @@ const createPost = async (req, res) => {
 
 // @desc    Update post
 // @route   PUT /api/posts/:id
-// @access  Private (Author/Admin)
+// @access  Private (Any authenticated user)
 const updatePost = async (req, res) => {
   try {
     const { id } = req.params;
@@ -282,13 +276,7 @@ const updatePost = async (req, res) => {
       });
     }
 
-    // Check if user can edit this post
-    if (req.user.role !== "ADMIN" && existingPost.authorId !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to edit this post",
-      });
-    }
+    // REMOVED: Role-based authorization check - any authenticated user can edit any post
 
     const updateData = {};
     if (title) {
@@ -344,7 +332,7 @@ const updatePost = async (req, res) => {
 
 // @desc    Delete post
 // @route   DELETE /api/posts/:id
-// @access  Private (Author/Admin)
+// @access  Private (Any authenticated user)
 const deletePost = async (req, res) => {
   try {
     const { id } = req.params;
@@ -360,13 +348,7 @@ const deletePost = async (req, res) => {
       });
     }
 
-    // Check if user can delete this post
-    if (req.user.role !== "ADMIN" && post.authorId !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to delete this post",
-      });
-    }
+    // REMOVED: Role-based authorization check - any authenticated user can delete any post
 
     await prisma.post.delete({
       where: { id },

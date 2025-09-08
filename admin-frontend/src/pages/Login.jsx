@@ -34,6 +34,10 @@ const Login = () => {
       console.log('Setting error:', result.message);
     } else {
       console.log('Login successful, should redirect');
+      // Add a small delay to see if the auth state updates
+      setTimeout(() => {
+        console.log('After login - checking auth state in Login component');
+      }, 100);
     }
     
     setLoading(false);
