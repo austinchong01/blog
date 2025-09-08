@@ -1,5 +1,5 @@
 const express = require('express');
-const { body } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 const {
   getComments,
   createComment,
@@ -7,12 +7,37 @@ const {
   deleteComment,
   getAllComments
 } = require('../controllers/commentsController');
-const { protect, optionalAuth, isAdmin } = require('../middleware/auth');
-const validate = require('../middleware/validate');
+const { protect, isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Validation rules
+// Custom validation middleware with better error reporting
+const validateWithDebug = (req, res, next) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    console.log('Validation errors:', errors.array());
+    console.log('Request body:', req.body);
+    
+    const errorMessages = errors.array().map(error => ({
+      field: error.path || error.param,
+      message: error.msg,
+      value: error.value,
+      location: error.location
+    }));
+
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: errorMessages,
+      receivedData: req.body
+    });
+  }
+
+  next();
+};
+
+// Validation rules for creating comments
 const commentValidation = [
   body('postId')
     .notEmpty()
@@ -21,15 +46,6 @@ const commentValidation = [
     .trim()
     .isLength({ min: 1, max: 1000 })
     .withMessage('Content is required and must be less than 1000 characters'),
-  body('username')
-    .trim()
-    .isLength({ min: 1, max: 50 })
-    .withMessage('Username is required and must be less than 50 characters'),
-  body('email')
-    .optional()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Please provide a valid email'),
   body('parentId')
     .optional()
     .notEmpty()
@@ -55,13 +71,13 @@ router.get('/:postId', getComments);
 
 // @route   POST /api/comments
 // @desc    Create new comment
-// @access  Public (with optional authentication)
-router.post('/', optionalAuth, commentValidation, validate, createComment);
+// @access  Private (Authentication required)
+router.post('/', protect, commentValidation, validateWithDebug, createComment);
 
 // @route   PUT /api/comments/:id
 // @desc    Update comment
 // @access  Private (Comment owner/Admin)
-router.put('/:id', protect, updateCommentValidation, validate, updateComment);
+router.put('/:id', protect, updateCommentValidation, validateWithDebug, updateComment);
 
 // @route   DELETE /api/comments/:id
 // @desc    Delete comment

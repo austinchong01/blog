@@ -70,15 +70,15 @@ const getComments = async (req, res) => {
 
 // @desc    Create new comment
 // @route   POST /api/comments
-// @access  Public
+// @access  Private (Authentication required)
 const createComment = async (req, res) => {
   try {
-    const { postId, content, username, email, parentId } = req.body;
+    const { postId, content, parentId } = req.body;
 
-    if (!postId || !content || !username) {
+    if (!postId || !content) {
       return res.status(400).json({
         success: false,
-        message: "Post ID, content, and username are required",
+        message: "Post ID and content are required",
       });
     }
 
@@ -119,11 +119,10 @@ const createComment = async (req, res) => {
 
     const commentData = {
       content: content.trim(),
-      username: username.trim(),
+      username: req.user.username, // Use authenticated user's username
       postId,
-      ...(email && { email: email.trim() }),
+      userId: req.user.id, // Always set userId for authenticated users
       ...(parentId && { parentId }),
-      ...(req.user && { userId: req.user.id }),
     };
 
     const comment = await prisma.comment.create({
