@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const CommentForm = ({ postId, parentId = null, onCommentAdded, onCancel, placeholder = "Write a comment..." }) => {
   const { user, isAuthenticated, API_BASE_URL, token } = useAuth();
   const [content, setContent] = useState('');
-  const [username, setUsername] = useState(user?.username || '');
-  const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -17,35 +16,27 @@ const CommentForm = ({ postId, parentId = null, onCommentAdded, onCancel, placeh
       return;
     }
 
-    if (!isAuthenticated && !username.trim()) {
-      setError('Username is required');
-      return;
-    }
-
     setSubmitting(true);
     setError(null);
 
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const body = {
+      const requestBody = {
         postId,
         content: content.trim(),
-        username: username.trim(),
-        ...(email && { email: email.trim() }),
-        ...(parentId && { parentId }),
       };
+
+      // Only add parentId if it exists
+      if (parentId) {
+        requestBody.parentId = parentId;
+      }
 
       const response = await fetch(`${API_BASE_URL}/comments`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify(body),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -53,10 +44,6 @@ const CommentForm = ({ postId, parentId = null, onCommentAdded, onCancel, placeh
       if (response.ok) {
         onCommentAdded(data.data.comment);
         setContent('');
-        if (!isAuthenticated) {
-          setUsername('');
-          setEmail('');
-        }
         if (onCancel) onCancel(); // Close reply form
       } else {
         setError(data.message || 'Failed to post comment');
@@ -69,35 +56,38 @@ const CommentForm = ({ postId, parentId = null, onCommentAdded, onCancel, placeh
     }
   };
 
+  // If user is not authenticated, show login prompt
+  if (!isAuthenticated) {
+    return (
+      <div className={parentId ? 'reply-form' : 'comment-form'}>
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '2rem',
+          background: '#f8f9fa',
+          borderRadius: '8px',
+          border: '1px solid #dee2e6'
+        }}>
+          <p style={{ marginBottom: '1rem', color: '#666' }}>
+            You must be logged in to post comments.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <Link to="/login" className="btn btn-primary">
+              Login
+            </Link>
+            <Link to="/register" className="btn btn-outline">
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className={parentId ? 'reply-form' : 'comment-form'}>
       {error && (
         <div className="alert alert-error">
           {error}
-        </div>
-      )}
-
-      {!isAuthenticated && (
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-          <div className="form-group" style={{ flex: 1 }}>
-            <input
-              type="text"
-              placeholder="Your name"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="form-input"
-              required
-            />
-          </div>
-          <div className="form-group" style={{ flex: 1 }}>
-            <input
-              type="email"
-              placeholder="Email (optional)"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-            />
-          </div>
         </div>
       )}
 
@@ -130,6 +120,10 @@ const CommentForm = ({ postId, parentId = null, onCommentAdded, onCancel, placeh
             Cancel
           </button>
         )}
+
+        <span style={{ fontSize: '0.875rem', color: '#666' }}>
+          Posting as <strong>{user.username}</strong>
+        </span>
       </div>
     </form>
   );

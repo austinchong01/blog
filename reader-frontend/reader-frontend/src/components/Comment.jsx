@@ -146,13 +146,16 @@ const Comment = ({ comment, postId, onCommentAdded, onCommentUpdated, onCommentD
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <button
-              onClick={() => setShowReplyForm(!showReplyForm)}
-              className="btn btn-outline"
-              style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}
-            >
-              Reply
-            </button>
+            {/* Only show reply button if user is authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowReplyForm(!showReplyForm)}
+                className="btn btn-outline"
+                style={{ fontSize: '0.875rem', padding: '0.25rem 0.5rem' }}
+              >
+                Reply
+              </button>
+            )}
 
             {canEdit && (
               <button

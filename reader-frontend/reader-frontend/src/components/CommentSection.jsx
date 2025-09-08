@@ -69,12 +69,15 @@ const CommentSection = ({ postId, comments: initialComments }) => {
     }
   };
 
+  const totalComments = comments.reduce((total, comment) => total + 1 + (comment.replies?.length || 0), 0);
+
   return (
     <div className="comments-section">
       <h3 className="comments-title">
-        Comments ({comments.reduce((total, comment) => total + 1 + (comment.replies?.length || 0), 0)})
+        Comments ({totalComments})
       </h3>
 
+      {/* Always show the comment form - it will handle auth internally */}
       <CommentForm 
         postId={postId} 
         onCommentAdded={handleCommentAdded}
@@ -83,7 +86,11 @@ const CommentSection = ({ postId, comments: initialComments }) => {
 
       <div className="comments-list">
         {comments.length === 0 ? (
-          <p className="no-comments">No comments yet. Be the first to comment!</p>
+          <div className="no-comments">
+            {isAuthenticated 
+              ? "No comments yet. Be the first to comment!" 
+              : "No comments yet."}
+          </div>
         ) : (
           comments.map(comment => (
             <Comment
